@@ -6,3 +6,4 @@ DB_PORT=3306
 
 EMAIL_USER=your_email@gmail.com
 EMAIL_PASS=your_app_password_here
+BASE_URL=https://lostandfoundbackend-trb4.onrender.com

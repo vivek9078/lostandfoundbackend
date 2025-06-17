@@ -60,7 +60,12 @@ app.post('/api/found', (req, res) => {
       from: process.env.EMAIL_USER,
       to: email,
       subject: 'Verify your found item',
-      html: `<p>Please verify your found item by clicking <a href="${verifyLink}">here</a>.</p>`
+      html: `
+  <p>Click the link below to verify your found item:</p>
+  <p><a href="${verifyLink}">${verifyLink}</a></p>
+  <p>If the link doesn't work, copy and paste it into your browser.</p>
+`
+
     }, (emailErr, info) => {
       if (emailErr) {
         console.error("📧 Email send error:", emailErr);
@@ -128,3 +133,4 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
+

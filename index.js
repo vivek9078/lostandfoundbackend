@@ -10,21 +10,17 @@ app.use(bodyParser.json());
 app.use(cors());
 
 // DB Connection
-const db = mysql.createConnection({
+const db = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
   database: process.env.DB_NAME,
-  port: process.env.DB_PORT || 3306
+  port: process.env.DB_PORT || 3306,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 });
 
-db.connect((err) => {
-  if (err) {
-    console.error("❌ MySQL connection failed:", err.message);
-    process.exit(1);
-  }
-  console.log("✅ Connected to MySQL database");
-});
 
 // Email Transporter
 const transporter = nodemailer.createTransport({
@@ -56,7 +52,9 @@ app.post('/api/found', (req, res) => {
     const token = Math.random().toString(36).substring(2);
     verificationTokens.set(token, { id: result.insertId, type: 'found' });
 
-    const verifyLink = `http://localhost:3000/api/verify/${token}`;
+    // ✅ FIXED: Use your actual backend URL from Render
+    const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
+    const verifyLink = `${baseUrl}/api/verify/${token}`;
 
     transporter.sendMail({
       from: process.env.EMAIL_USER,
@@ -125,8 +123,8 @@ app.post('/api/search', (req, res) => {
   });
 });
 
-// Start Server
+// Start Server (✅ Dynamic PORT for Render)
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });

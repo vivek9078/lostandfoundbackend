@@ -41,7 +41,7 @@ app.post('/api/found', (req, res) => {
     return res.status(400).json({ message: '❗ Missing required fields (email, item_name, color, location)' });
   }
 
-  const sql = 'INSERT INTO found_items (email, item_name, color, brand, location, verified) VALUES (?, ?, ?, ?, ?, 0)';
+  const sql = 'INSERT INTO found_items (email, item_name, color, brand, location, verified, claimed, claimed_by) VALUES (?, ?, ?, ?, ?, 0, 0, NULL)';
   db.query(sql, [email, item_name, color, brand, location], (err, result) => {
     if (err) {
       console.error("❌ Database insert error:", err);
@@ -51,10 +51,8 @@ app.post('/api/found', (req, res) => {
     const token = Math.random().toString(36).substring(2);
     verificationTokens.set(token, { id: result.insertId, type: 'found' });
 
-    // ✅ Always use HTTPS in the email
     const verifyLink = `https://${process.env.BASE_URL}/api/verify/${token}`;
 
-    // Send styled, clickable email
     transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
@@ -108,7 +106,7 @@ app.get('/api/verify/:token', (req, res) => {
   });
 });
 
-// Search Lost Item
+// Search Lost Item (ONLY shows unclaimed + verified)
 app.post('/api/search', (req, res) => {
   let { item_name, color, brand } = req.body;
 
@@ -118,7 +116,7 @@ app.post('/api/search', (req, res) => {
   color = color?.toLowerCase().trim();
   brand = brand?.toLowerCase().trim();
 
-  db.query('SELECT * FROM found_items WHERE verified = 1', (err, results) => {
+  db.query('SELECT * FROM found_items WHERE verified = 1 AND claimed = 0', (err, results) => {
     if (err) {
       console.error("❌ DB error during search:", err);
       return res.status(500).json({ message: 'DB error during search', error: err.message });
@@ -140,9 +138,33 @@ app.post('/api/search', (req, res) => {
   });
 });
 
+// Claim a Found Item
+app.post('/api/claim/:id', (req, res) => {
+  const itemId = req.params.id;
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ message: 'Claimer email is required' });
+  }
+
+  const sql = 'UPDATE found_items SET claimed = 1, claimed_by = ? WHERE id = ? AND claimed = 0';
+  db.query(sql, [email, itemId], (err, result) => {
+    if (err) {
+      console.error("❌ Claim update error:", err);
+      return res.status(500).json({ message: 'Failed to claim item' });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Item not found or already claimed' });
+    }
+
+    console.log(`✔️ Item ID ${itemId} claimed by ${email}`);
+    res.json({ message: 'Item successfully claimed' });
+  });
+});
+
 // Start Server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
-

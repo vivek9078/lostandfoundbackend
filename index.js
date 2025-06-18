@@ -21,7 +21,6 @@ const db = mysql.createPool({
   queueLimit: 0
 });
 
-
 // Email Transporter
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -52,25 +51,33 @@ app.post('/api/found', (req, res) => {
     const token = Math.random().toString(36).substring(2);
     verificationTokens.set(token, { id: result.insertId, type: 'found' });
 
-    // ✅ FIXED: Use your actual backend URL from Render
     const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
     const verifyLink = `${baseUrl}/api/verify/${token}`;
 
+    // ✅ Clickable and styled verification link
     transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
       subject: 'Verify your found item',
-html: `
-  <p>✅ Your item has been successfully registered.</p>
-  <p>Please click the link below to verify your found item:</p>
-  <p><a href="${verifyLink}" style="color: blue; text-decoration: underline;">${verifyLink}</a></p>
-  <p>If the link doesn't open automatically, copy and paste it into your browser.</p>
-  <hr>
-  <p>Lost & Found System</p>
-`
-
-
-
+      html: `
+        <div style="font-family: sans-serif; font-size: 16px;">
+          <p>✅ Your item has been successfully registered.</p>
+          <p>Please click the button below to verify your found item:</p>
+          <p>
+            <a href="${verifyLink}" 
+               style="display: inline-block; background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;"
+               target="_blank" rel="noopener">
+              ✅ Verify Item
+            </a>
+          </p>
+          <p>If the button doesn’t work, copy and paste this link into your browser:</p>
+          <p style="word-break: break-all;">
+            <a href="${verifyLink}">${verifyLink}</a>
+          </p>
+          <hr>
+          <p style="font-size: 14px;">— Lost & Found System</p>
+        </div>
+      `
     }, (emailErr, info) => {
       if (emailErr) {
         console.error("📧 Email send error:", emailErr);

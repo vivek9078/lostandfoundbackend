@@ -60,11 +60,16 @@ app.post('/api/found', (req, res) => {
       from: process.env.EMAIL_USER,
       to: email,
       subject: 'Verify your found item',
-      html: `
-  <p>Click the link below to verify your found item:</p>
-  <p><a href="${verifyLink}">${verifyLink}</a></p>
-  <p>If the link doesn't work, copy and paste it into your browser.</p>
+html: `
+  <p>✅ Your item has been successfully registered.</p>
+  <p>Please click the link below to verify your found item:</p>
+  <p><a href="${verifyLink}" style="color: blue; text-decoration: underline;">${verifyLink}</a></p>
+  <p>If the link doesn't open automatically, copy and paste it into your browser.</p>
+  <hr>
+  <p>Lost & Found System</p>
 `
+
+
 
     }, (emailErr, info) => {
       if (emailErr) {

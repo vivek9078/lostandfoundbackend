@@ -51,10 +51,10 @@ app.post('/api/found', (req, res) => {
     const token = Math.random().toString(36).substring(2);
     verificationTokens.set(token, { id: result.insertId, type: 'found' });
 
-    const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
-    const verifyLink = `${baseUrl}/api/verify/${token}`;
+    // ✅ Always use HTTPS in the email
+    const verifyLink = `https://${process.env.BASE_URL}/api/verify/${token}`;
 
-    // ✅ Clickable and styled verification link
+    // Send styled, clickable email
     transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
@@ -66,13 +66,13 @@ app.post('/api/found', (req, res) => {
           <p>
             <a href="${verifyLink}" 
                style="display: inline-block; background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;"
-               target="_blank" rel="noopener">
+               target="_blank" rel="noopener noreferrer">
               ✅ Verify Item
             </a>
           </p>
           <p>If the button doesn’t work, copy and paste this link into your browser:</p>
           <p style="word-break: break-all;">
-            <a href="${verifyLink}">${verifyLink}</a>
+            <a href="${verifyLink}" target="_blank" rel="noopener noreferrer">${verifyLink}</a>
           </p>
           <hr>
           <p style="font-size: 14px;">— Lost & Found System</p>
@@ -140,7 +140,7 @@ app.post('/api/search', (req, res) => {
   });
 });
 
-// Start Server (✅ Dynamic PORT for Render)
+// Start Server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
